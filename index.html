@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Header Maker</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik&display=swap');
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 50vh;
+      padding: 20px;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    .button-3 {
+        appearance: none;
+        background-color: #2ea44f;
+        border: 1px solid rgba(27, 31, 35, .15);
+        border-radius: 6px;
+        box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+        box-sizing: border-box;
+        color: #fff;
+        cursor: pointer;
+        display: inline-block;
+        font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        padding: 6px 16px;
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        vertical-align: middle;
+        white-space: nowrap;
+        }
+
+        .button-3:focus:not(:focus-visible):not(.focus-visible) {
+        box-shadow: none;
+        outline: none;
+        }
+
+        .button-3:hover {
+        background-color: #2c974b;
+        }
+
+        .button-3:focus {
+        box-shadow: rgba(46, 164, 79, .4) 0 0 0 3px;
+        outline: none;
+        }
+
+        .button-3:disabled {
+        background-color: #94d3a2;
+        border-color: rgba(27, 31, 35, .1);
+        color: rgba(255, 255, 255, .8);
+        cursor: default;
+        }
+
+        .button-3:active {
+        background-color: #298e46;
+        box-shadow: rgba(20, 70, 32, .2) 0 1px 0 inset;
+        }
+
+    h1 {
+      text-align: center;
+    }
+
+    /* label {
+      text-align: center;
+    } */
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+      max-width: 100%;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      resize: vertical;
+    }
+
+    .output-container {
+      display: none;
+      width: auto;
+      margin-top: 20px;
+      max-width: 100%;
+      align-items: center;
+    }
+
+    .output-container.show {
+      display: block;
+    }
+
+    @media (min-width: 480px) {
+      .container {
+        max-width: 480px;
+      }
+    }
+  </style>
+  <script>
+    function parseHeader() {
+      const headerString = document.getElementById('headerInput').value;
+      const format = document.getElementById('formatSelect').value;
+      const result = parseRequestHeader(headerString, format);
+      const outputTextarea = document.getElementById('output');
+      outputTextarea.value = format === 'javascript' ? JSON.stringify(result, null, 2) : result;
+      const outputContainer = document.getElementById('outputContainer');
+      outputContainer.classList.add('show');
+      const copyButton = document.getElementById('copyButton');
+      copyButton.disabled = false;
+    }
+
+    function parseRequestHeader(headerString, format = 'javascript') {
+      const headers = headerString.split('\n');
+      const headerArray = [];
+      for (let i = 0; i < headers.length; i++) {
+        const header = headers[i].trim();
+        if (header !== '') {
+          const separatorIndex = header.indexOf(':');
+          const key = header.substring(0, separatorIndex).trim();
+          const value = header.substring(separatorIndex + 1).trim();
+          headerArray.push({ key, value });
+        }
+      }
+
+      if (format === 'python') {
+        let pythonFormattedHeader = '{\n';
+        for (let i = 0; i < headerArray.length; i++) {
+          const { key, value } = headerArray[i];
+          pythonFormattedHeader += `    '${key}': '${value}',\n`;
+        }
+        pythonFormattedHeader += '}';
+        return pythonFormattedHeader;
+      } else if (format === 'python-json') {
+        let pythonJsonFormattedHeader = '{\n';
+        for (let i = 0; i < headerArray.length; i++) {
+          const { key, value } = headerArray[i];
+          pythonJsonFormattedHeader += `    "${key}": "${value}",\n`;
+        }
+        pythonJsonFormattedHeader += '}';
+        return pythonJsonFormattedHeader;
+      } else if (format === 'php') {
+        let phpFormattedHeader = 'array(\n';
+        for (let i = 0; i < headerArray.length; i++) {
+          const { key, value } = headerArray[i];
+          phpFormattedHeader += `    '${key}' => '${value}',\n`;
+        }
+        phpFormattedHeader += ')';
+        return phpFormattedHeader;
+      } else if (format === 'php-json') {
+        let phpJsonFormattedHeader = '[\n';
+        for (let i = 0; i < headerArray.length; i++) {
+          const { key, value } = headerArray[i];
+          phpJsonFormattedHeader += `    "${key}" => "${value}",\n`;
+        }
+        phpJsonFormattedHeader += ']';
+        return phpJsonFormattedHeader;
+      } else {
+        return headerArray;
+      }
+    }
+
+    function copyOutput() {
+      const outputTextarea = document.getElementById('output');
+      outputTextarea.select();
+      document.execCommand('copy');
+      alert('Output copied to clipboard!');
+    }
+  </script>
+</head>
+<body>
+  <h1>Request Header Maker</h1>
+  <div class="container">
+    <label for="headerInput">Enter Request Header:</label><br>
+    <textarea placeholder="Paste Request Header Here.." id="headerInput" rows="10" cols="80"></textarea>
+  </div>
+  <div class="container">
+    <label for="formatSelect">Select Output Format:</label>
+    <select id="formatSelect">
+      <option value="javascript">JavaScript Object</option>
+      <option value="python">Python Array</option>
+      <option value="python-json">Python JSON</option>
+      <option value="php">PHP Array</option>
+      <option value="php-json">PHP JSON</option>
+    </select>
+  </div>
+  <div class="container">
+    <button class="button-3" onclick="parseHeader()">Create Header</button>
+  </div>
+  <div id="outputContainer" rows="10" cols="80" class="output-container">
+    <div class="container">
+      <textarea id="output" readonly></textarea>
+    </div>
+    <div class="container">
+      <button id="copyButton" class="button-3" onclick="copyOutput()" disabled>Copy Output</button>
+    </div>
+  </div>
+</body>
+</html>
